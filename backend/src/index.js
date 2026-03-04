@@ -20,12 +20,26 @@ const io=new Server(server,{
 let rooms={}
 
 
+let currentWord="Apple"
 
 io.on("connection",(socket)=>{
     console.log("User connected:",socket.id)
 
     socket.on("disconnect",()=>{
         console.log("User disconnected:",socket.id)
+    })
+
+    socket.on("guess",(data)=>{
+        const {name,room,guess}=data
+        if(guess.toLowerCase()===currentWord){
+            io.to(room).emit("guess_result",{
+                player:name,
+                correct:true
+            })
+        }
+        else{
+            io.to(room).emit("chat_message",`${name}: ${guess}`)
+        }
     })
 
     socket.on('join_room',({name,room})=>{
