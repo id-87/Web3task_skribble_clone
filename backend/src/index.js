@@ -19,8 +19,24 @@ const io=new Server(server,{
 
 let rooms={}
 
+function startRound(room){
+    const players=rooms[room].players
+    if(players.length===0){
+        return
+    }
+    const drawer=players[Math.floor(Math.random()*players.length)]
+    const word=words[Math.floor(Math.random()*words.length)]
 
-let currentWord="Apple"
+    rooms[room].currentWord=word
+    rooms[room].drawer=drawer.id
+
+    io.to(room).emit('round_start',{drawer:drawer.id})
+
+    io.to(drawer.id).emit("your_word",word)
+}
+
+
+const words=["apple",'car','house','tree','cat','phone']
 
 io.on("connection",(socket)=>{
     console.log("User connected:",socket.id)
@@ -30,16 +46,31 @@ io.on("connection",(socket)=>{
     })
 
     socket.on("guess",(data)=>{
-        const {name,room,guess}=data
-        if(guess.toLowerCase()===currentWord){
-            io.to(room).emit("guess_result",{
-                player:name,
-                correct:true
-            })
+
+    const {name,room,guess} = data
+
+    const word = rooms[room].currentWord
+
+    if(guess.toLowerCase() === word){
+
+        const player = rooms[room].players.find(p=>p.name===name)
+
+        if(player){
+        player.score += 10
         }
-        else{
-            io.to(room).emit("chat_message",`${name}: ${guess}`)
-        }
+
+        io.to(room).emit("player_list",rooms[room].players)
+
+        io.to(room).emit("chat_message",`${name} guessed correctly!`)
+
+        startRound(room)
+
+    } else {
+
+        io.to(room).emit("chat_message",`${name}: ${guess}`)
+
+    }
+
     })
 
     socket.on('join_room',({name,room})=>{
@@ -58,6 +89,10 @@ io.on("connection",(socket)=>{
 
         console.log(name,"joined",room)
         io.to(room).emit('player_list',rooms[room].players)
+
+        if(rooms[room].players.length>=2){
+            startRound(room)
+        }
     })
 
     socket.on("draw_move",(data)=>{
