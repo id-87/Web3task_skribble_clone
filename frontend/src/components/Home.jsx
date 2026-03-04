@@ -31,9 +31,15 @@ const Home = () => {
     const ctx=canvas.getContext("2d")
 
     let drawing=false
+    let lastX = 0
+    let lastY = 0
 
     const handleMouseDown=(e)=>{
         drawing=true
+
+        lastX=e.offsetX
+        lastY=e.offsetY
+
         ctx.beginPath()
         ctx.moveTo(e.offsetX,e.offsetY)
     }
@@ -52,7 +58,10 @@ const Home = () => {
       ctx.stroke()
 
       
-      socket.emit("draw_move",{x,y})
+      socket.emit("draw_move",{x,y,lastX,lastY,room})
+
+      lastX=x
+      lastY=y
 
     }
 
@@ -70,9 +79,8 @@ const Home = () => {
    
 
     socket.on("draw_move",(data)=>{
-        // const canvas=canvasRef.current
-        // const ctx=canvas.getContext("2d")
-
+        ctx.beginPath()
+        ctx.moveTo(data.lastX,data.lastY)
         ctx.lineTo(data.x,data.y)
         ctx.stroke()
     })
