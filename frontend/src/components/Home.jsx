@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState , useRef} from "react"
 import { io } from "socket.io-client"
 
 const PORT = import.meta.env.VITE_PORT || 3000
@@ -10,6 +10,7 @@ const Home = () => {
     const [name,setName]=useState("")
     const [room,setRoom]=useState("room1")
     const [players,setPlayers]=useState([])
+    const canvasRef=useRef(null)
 
   useEffect(() => {
 
@@ -48,22 +49,27 @@ const Home = () => {
     <div className="container">
       <div>
         <input
-placeholder="Enter name"
-onChange={(e)=>setName(e.target.value)}
-/>
+            placeholder="Enter name"
+            onChange={(e)=>setName(e.target.value)}
+        />
 
-<button onClick={joinRoom}>
-Join Room
-</button>
+        <button onClick={joinRoom}>
+        Join Room
+        </button>
 
-<h3>Players in Lobby</h3>
+        <h3>Players in Lobby</h3>
 
-{players.map(p => (
-<div key={p.id}>
-{p.name} — {p.score}
-</div>
-))}
+        {players.map(p => (
+        <div key={p.id}>
+        {p.name} — {p.score}
+        </div>
+        ))}
       </div>
+      <canvas
+      ref={canvasRef}
+      width={600}
+      height={400}
+      style={{border:'2px solid black', marginTop:"20px"}}/>
     </div>
   )
 }
