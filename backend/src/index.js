@@ -45,6 +45,10 @@ io.on("connection",(socket)=>{
         console.log(name,"joined",room)
         io.to(room).emit('player_list',rooms[room].players)
     })
+
+    socket.on("draw-move",(data)=>{
+        socket.broadcast.emit("draw_move",data)
+    })
 })
 
 const PORT=process.env.port || 3000
