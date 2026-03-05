@@ -15,6 +15,7 @@ const Home = () => {
     const[isDrawer,setIsDrawer]=useState(false)
     const [isHost,setIsHost] = useState(false)
     const [wordChoices,setWordChoices] = useState([])
+    const [maxRounds,setMaxRounds] = useState(7)
     const canvasRef=useRef(null)
 
   useEffect(() => {
@@ -38,6 +39,14 @@ const Home = () => {
         }
         
     })
+
+    socket.on("game_over",(data)=>{
+
+    alert(`Game Over! Winner: ${data.winner} (${data.score} points)`)
+
+    })
+
+    socket.off("word_options")
     socket.on("word_options",(options)=>{
     setWordChoices(options)
     })
@@ -173,11 +182,26 @@ const Home = () => {
         Join Room
         </button>
 
+
         {isHost && (
-            <button onClick={()=>socket.emit("start_game",room)}>
+            <div>
+            <label>Rounds:</label>
+
+            <input
+            type="number"
+            value={maxRounds}
+            onChange={(e)=>setMaxRounds(e.target.value)}
+            style={{width:"60px"}}
+            />
+
+            <button onClick={()=>socket.emit("start_game",{room,maxRounds})}>
             Start Game
             </button>
+
+            </div>
             )}
+
+      
 
         <h3>Players in Lobby</h3>
 
