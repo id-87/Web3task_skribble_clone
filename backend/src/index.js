@@ -25,14 +25,21 @@ function startRound(room){
         return
     }
     const drawer=players[Math.floor(Math.random()*players.length)]
-    const word=words[Math.floor(Math.random()*words.length)]
+    rooms[room].drawer = drawer.id
 
-    rooms[room].currentWord=word
-    rooms[room].drawer=drawer.id
+
+    const options = []
+
+    for(let i=0;i<3;i++){
+    options.push(words[Math.floor(Math.random()*words.length)])
+    }
+
 
     io.to(room).emit('round_start',{drawer:drawer.id})
 
-    io.to(drawer.id).emit("your_word",word)
+
+    io.to(drawer.id).emit("word_options",options)
+        
 }
 
 
@@ -44,6 +51,25 @@ io.on("connection",(socket)=>{
     socket.on("disconnect",()=>{
         console.log("User disconnected:",socket.id)
     })
+
+    socket.on("select_word",({room,word})=>{
+
+    rooms[room].currentWord = word
+
+    io.to(room).emit("chat_message","Word selected. Start guessing!")
+
+})
+
+    socket.on("start_game",(room)=>{
+
+        if(socket.id !== rooms[room].host){
+        return
+        }
+
+        startRound(room)
+
+        })
+
 
     socket.on("guess",(data)=>{
 
@@ -77,9 +103,13 @@ io.on("connection",(socket)=>{
         socket.join(room)
         if(!rooms[room]){
             rooms[room]={
-                players:[]
+            players:[],
+            host:socket.id,
+            currentWord:null,
+            drawer:null
             }
         }
+        
 
         rooms[room].players.push({
             id:socket.id,
@@ -90,9 +120,7 @@ io.on("connection",(socket)=>{
         console.log(name,"joined",room)
         io.to(room).emit('player_list',rooms[room].players)
 
-        if(rooms[room].players.length>=2){
-            startRound(room)
-        }
+        
     })
 
     socket.on("draw_move",(data)=>{
